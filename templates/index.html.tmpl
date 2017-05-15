@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>drop.reo7sp.ru</title>
+        <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/pure/0.6.2/pure-min.css">
+
+        <style>
+            body {
+                font-family: sans-serif;
+            }
+            a {
+                color: #337ab7;
+            }
+            a:hover {
+                color: #23527c;
+            }
+
+            .container {
+                max-width: 640px;
+                padding: 16px;
+                margin: 0 auto;
+            }
+
+            .drop-header {
+                margin-bottom: 4em;
+            }
+            .drop-header__link {
+                color: #000;
+            }
+
+            .drop {
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                padding: 12px 16px;
+            }
+
+            .new-drop-form {
+                margin-top: 4em;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class="container">
+            <div class="drop-header">
+                <h1>drop.<a class="drop-header__link" href="https://reo7sp.ru" target="_blank">reo7sp.ru</a></h1>
+                <p>Drop text for 5 minutes</p>
+            </div>
+
+            {{range .drops}}
+            <p class="drop">
+                {{.text}}
+            </p>
+            {{end}}
+
+            <form class="new-drop-form pure-form pure-form-stacked" action="/" method="post">
+                <textarea class="pure-input-1" name="text"></textarea>
+                <button class="pure-button  pure-input-1 pure-button-primary" type="submit">Drop</button>
+            </form>
+        </div>
+    </body>
+</html>
