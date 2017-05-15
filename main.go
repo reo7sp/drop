@@ -6,9 +6,7 @@ import (
 )
 
 type config struct {
-	RedisAddr     string `env:"REDIS_ADDR" envDefault:"localhost:6379"`
-	RedisPassword string `env:"REDIS_PASSWORD" envDefault:""`
-	RedisDb       int `env:"REDIS_DB" endDefault:"0"`
+	RedisUrl     string `env:"REDIS_URL" envDefault:"redis://:@localhost:6379/"`
 }
 
 func main() {
@@ -18,7 +16,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	redisClient, err := InitRedis(cfg.RedisAddr, cfg.RedisPassword, cfg.RedisDb)
+	redisClient, err := InitRedis(cfg.RedisUrl)
 	if err != nil {
 		log.Fatal(err)
 	}

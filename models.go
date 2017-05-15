@@ -6,12 +6,12 @@ import (
 	"strconv"
 )
 
-func InitRedis(redisAddr string, redisPassword string, redisDb int) (client *redis.Client, err error) {
-	client = redis.NewClient(&redis.Options{
-		Addr:     redisAddr,
-		Password: redisPassword,
-		DB:       redisDb,
-	})
+func InitRedis(redisUrl string) (client *redis.Client, err error) {
+	opts, err := redis.ParseURL(redisUrl)
+	if err != nil {
+		return
+	}
+	client = redis.NewClient(opts)
 	err = client.Ping().Err()
 	return
 }
