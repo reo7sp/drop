@@ -1,0 +1,23 @@
+version: "3.0"
+
+services:
+  app:
+    build: .
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      - REDIS_ADDR=redis:6379
+      - REDIS_PASSWORD=vr6aQH4PdmyVxhn7jdJFQCV9
+    depends_on:
+      - redis
+
+  redis:
+    image: redis
+    restart: always
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --requirepass vr6aQH4PdmyVxhn7jdJFQCV9
+
+volumes:
+    redis_data:
