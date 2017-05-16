@@ -56,9 +56,9 @@
             </p>
             {{end}}
 
-            <form class="new-drop-form pure-form pure-form-stacked" action="/" method="post">
-                <textarea class="pure-input-1" name="text"></textarea>
-                <button class="pure-button  pure-input-1 pure-button-primary" type="submit">Drop</button>
+            <form class="new-drop-form pure-form pure-form-stacked" method="post" action="/" onsubmit="return document.getElementById('text').value != ''">
+                <textarea class="pure-input-1" name="text" id="text" rows="3" autofocus></textarea>
+                <button class="pure-button pure-input-1 pure-button-primary" type="submit">Drop</button>
             </form>
         </div>
     </body>
