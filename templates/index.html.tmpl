@@ -10,18 +10,26 @@
             body {
                 font-family: sans-serif;
             }
+
             a {
-                color: #337ab7;
+                color: #0060a0;
+                text-decoration: none;
+                border-bottom: 1px solid rgba(0,96,160,.2);
             }
             a:hover {
-                color: #23527c;
+                color: #d04000;
+                border-bottom-color: rgba(208,64,0,.2);
+            }
+            h1 a {
+                border-bottom-width: 2px;
+            }
+
+            textarea:focus {
+                border-color: #4caf50 !important;
             }
 
             .pure-button-primary {
                 background-color: #4caf50;
-            }
-            textarea:focus {
-                border-color: #4caf50 !important;
             }
 
             .container {
@@ -33,6 +41,7 @@
             .drop-header {
                 margin-bottom: 4em;
             }
+
             .drop-header__link {
                 color: #000;
             }
@@ -53,7 +62,7 @@
     <body>
         <div class="container">
             <div class="drop-header">
-                <h1>drop.<a class="drop-header__link" href="//olezh.es" target="_blank">olezh.es</a></h1>
+                <h1>drop.<a class="drop-header__link" href="//olezh.es">olezh.es</a></h1>
                 <p>Drop text for 5 minutes</p>
             </div>
 
