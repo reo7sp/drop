@@ -1,7 +1,7 @@
 package main
 
 import (
-	"gopkg.in/gin-gonic/gin.v1"
+	"github.com/gin-gonic/gin"
 	"net/http"
 	"github.com/go-redis/redis"
 )
