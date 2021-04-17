@@ -1,9 +1,11 @@
 package main
 
 import (
-	"github.com/go-redis/redis"
-	"time"
+	"context"
 	"strconv"
+	"time"
+
+	"github.com/go-redis/redis"
 )
 
 func InitRedis(redisUrl string) (client *redis.Client, err error) {
@@ -12,7 +14,7 @@ func InitRedis(redisUrl string) (client *redis.Client, err error) {
 		return
 	}
 	client = redis.NewClient(opts)
-	err = client.Ping().Err()
+	err = client.Ping(context.Background()).Err()
 	return
 }
 
@@ -22,7 +24,7 @@ func FetchAllDrops(redisClient *redis.Client) (drops []string, err error) {
 		return
 	}
 
-	drops, err = redisClient.LRange("drops", 0, -1).Result()
+	drops, err = redisClient.LRange(context.Background(), "drops", 0, -1).Result()
 	return
 }
 
@@ -31,7 +33,7 @@ func CleanupDrops(redisClient *redis.Client) (error) {
 	now := time.Now().Unix()
 
 	for {
-		ok, err := redisClient.Exists("drop_times").Result()
+		ok, err := redisClient.Exists(context.Background(), "drop_times").Result()
 		if err != nil {
 			return err
 		}
@@ -39,7 +41,7 @@ func CleanupDrops(redisClient *redis.Client) (error) {
 			return nil
 		}
 
-		dropTimeStr, err := redisClient.LIndex("drop_times", -1).Result()
+		dropTimeStr, err := redisClient.LIndex(context.Background(), "drop_times", -1).Result()
 		if err != nil {
 			return err
 		}
@@ -49,11 +51,11 @@ func CleanupDrops(redisClient *redis.Client) (error) {
 		}
 
 		if now - dropTime > fiveMinutes {
-			err = redisClient.RPop("drop_times").Err()
+			err = redisClient.RPop(context.Background(), "drop_times").Err()
 			if err != nil {
 				return err
 			}
-			err = redisClient.RPop("drops").Err()
+			err = redisClient.RPop(context.Background(), "drops").Err()
 			if err != nil {
 				return err
 			}
@@ -66,10 +68,11 @@ func CleanupDrops(redisClient *redis.Client) (error) {
 }
 
 func SaveDrop(redisClient *redis.Client, drop string) (err error) {
-	err = redisClient.LPush("drops", drop).Err()
+	err = redisClient.LPush(context.Background(), "drops", drop).Err()
 	if err != nil {
 		return
 	}
-	err = redisClient.LPush("drop_times", time.Now().Unix()).Err()
+	err = redisClient.LPush(context.Background(), "drop_times", time.Now().Unix()).Err()
 	return
 }
+
