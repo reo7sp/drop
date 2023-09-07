@@ -1,39 +1,38 @@
 package main
 
 import (
-	"context"
 	"strconv"
 	"time"
 
 	"github.com/go-redis/redis"
 )
 
-func InitRedis(redisUrl string) (client *redis.Client, err error) {
+func initRedis(redisUrl string) (client *redis.Client, err error) {
 	opts, err := redis.ParseURL(redisUrl)
 	if err != nil {
 		return
 	}
 	client = redis.NewClient(opts)
-	err = client.Ping(context.Background()).Err()
+	err = client.Ping().Err()
 	return
 }
 
-func FetchAllDrops(redisClient *redis.Client) (drops []string, err error) {
-	err = CleanupDrops(redisClient)
+func fetchAllDrops(redisClient *redis.Client) (drops []string, err error) {
+	err = cleanupDrops(redisClient)
 	if err != nil {
 		return
 	}
 
-	drops, err = redisClient.LRange(context.Background(), "drops", 0, -1).Result()
+	drops, err = redisClient.LRange("drops", 0, -1).Result()
 	return
 }
 
-func CleanupDrops(redisClient *redis.Client) (error) {
+func cleanupDrops(redisClient *redis.Client) error {
 	const fiveMinutes = 5 * 60
 	now := time.Now().Unix()
 
 	for {
-		ok, err := redisClient.Exists(context.Background(), "drop_times").Result()
+		ok, err := redisClient.Exists("drop_times").Result()
 		if err != nil {
 			return err
 		}
@@ -41,7 +40,7 @@ func CleanupDrops(redisClient *redis.Client) (error) {
 			return nil
 		}
 
-		dropTimeStr, err := redisClient.LIndex(context.Background(), "drop_times", -1).Result()
+		dropTimeStr, err := redisClient.LIndex("drop_times", -1).Result()
 		if err != nil {
 			return err
 		}
@@ -50,12 +49,12 @@ func CleanupDrops(redisClient *redis.Client) (error) {
 			return err
 		}
 
-		if now - dropTime > fiveMinutes {
-			err = redisClient.RPop(context.Background(), "drop_times").Err()
+		if now-dropTime > fiveMinutes {
+			err = redisClient.RPop("drop_times").Err()
 			if err != nil {
 				return err
 			}
-			err = redisClient.RPop(context.Background(), "drops").Err()
+			err = redisClient.RPop("drops").Err()
 			if err != nil {
 				return err
 			}
@@ -67,12 +66,11 @@ func CleanupDrops(redisClient *redis.Client) (error) {
 	return nil
 }
 
-func SaveDrop(redisClient *redis.Client, drop string) (err error) {
-	err = redisClient.LPush(context.Background(), "drops", drop).Err()
+func saveDrop(redisClient *redis.Client, drop string) (err error) {
+	err = redisClient.LPush("drops", drop).Err()
 	if err != nil {
 		return
 	}
-	err = redisClient.LPush(context.Background(), "drop_times", time.Now().Unix()).Err()
+	err = redisClient.LPush("drop_times", time.Now().Unix()).Err()
 	return
 }
-

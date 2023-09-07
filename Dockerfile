@@ -1,10 +1,9 @@
-FROM golang:1.14
+FROM golang:1.21
 
 WORKDIR /go/src/app
 COPY . .
 
-RUN go get -d ./...
-RUN go install ./...
+RUN go build -o app .
 
 ENV GIN_MODE release
 EXPOSE 8080

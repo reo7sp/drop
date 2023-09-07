@@ -2,15 +2,15 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"net/http"
 	"github.com/go-redis/redis"
+	"net/http"
 )
 
-func InitWeb(redisClient *redis.Client) {
+func initWeb(redisClient *redis.Client) {
 	r := gin.Default()
 	r.LoadHTMLGlob("templates/*")
 	r.GET("/", func(c *gin.Context) {
-		drops, err := FetchAllDrops(redisClient)
+		drops, err := fetchAllDrops(redisClient)
 		if err != nil {
 			c.AbortWithError(http.StatusInternalServerError, err)
 			return
@@ -25,7 +25,7 @@ func InitWeb(redisClient *redis.Client) {
 			return
 		}
 
-		err := SaveDrop(redisClient, text)
+		err := saveDrop(redisClient, text)
 		if err != nil {
 			c.AbortWithError(http.StatusInternalServerError, err)
 			return
