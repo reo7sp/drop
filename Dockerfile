@@ -1,9 +1,11 @@
 FROM golang:1.26.6
 
 WORKDIR /usr/src/app
-COPY . .
+COPY go.mod go.sum ./
+RUN go mod download
 
-RUN go build -o app . && mv app /usr/local/bin/app
+COPY . .
+RUN go build -o /usr/local/bin/app .
 
 EXPOSE 8080
 CMD ["app"]

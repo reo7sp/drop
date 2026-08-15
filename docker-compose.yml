@@ -22,6 +22,7 @@ services:
 
   test:
     profiles: ["test"]
+    image: drop:test
     build: .
     command: ["go", "test", "-race", "-cover", "./..."]
     environment:
@@ -29,4 +30,3 @@ services:
     depends_on:
       redis:
         condition: service_healthy
-
