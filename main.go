@@ -1,8 +1,10 @@
 package main
 
 import (
-	"github.com/caarlos0/env"
+	"context"
 	"log"
+
+	"github.com/caarlos0/env/v11"
 )
 
 type config struct {
@@ -16,9 +18,12 @@ func main() {
 		log.Fatal(err)
 	}
 
-	redisClient, err := initRedis(cfg.RedisUrl)
+	redisClient, err := initRedis(context.Background(), cfg.RedisUrl)
 	if err != nil {
 		log.Fatal(err)
 	}
-	initWeb(redisClient)
+	err = initWeb(redisClient)
+	if err != nil {
+		log.Fatal(err)
+	}
 }

@@ -1,37 +1,54 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/go-redis/redis"
+	"bytes"
+	"html/template"
 	"net/http"
+
+	"github.com/redis/go-redis/v9"
 )
 
-func initWeb(redisClient *redis.Client) {
-	r := gin.Default()
-	r.LoadHTMLGlob("templates/*")
-	r.GET("/", func(c *gin.Context) {
-		drops, err := fetchAllDrops(redisClient)
+func initWeb(redisClient *redis.Client) error {
+	tmpl, err := template.ParseGlob("templates/*")
+	if err != nil {
+		return err
+	}
+
+	return http.ListenAndServe(":8080", newHandler(redisClient, tmpl))
+}
+
+func newHandler(redisClient *redis.Client, tmpl *template.Template) http.Handler {
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) {
+		drops, err := fetchAllDrops(r.Context(), redisClient)
 		if err != nil {
-			c.AbortWithError(http.StatusInternalServerError, err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
 
-		c.HTML(http.StatusOK, "index.html.tmpl", drops)
+		var body bytes.Buffer
+		err = tmpl.ExecuteTemplate(&body, "index.html.tmpl", drops)
+		if err != nil {
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		_, _ = body.WriteTo(w)
 	})
-	r.POST("/", func(c *gin.Context) {
-		text := c.PostForm("text")
+	mux.HandleFunc("POST /{$}", func(w http.ResponseWriter, r *http.Request) {
+		text := r.FormValue("text")
 		if text == "" {
-			c.AbortWithStatus(http.StatusBadRequest)
+			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
 
-		err := saveDrop(redisClient, text)
+		err := saveDrop(r.Context(), redisClient, text)
 		if err != nil {
-			c.AbortWithError(http.StatusInternalServerError, err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
 
-		c.Redirect(http.StatusSeeOther, "/")
+		http.Redirect(w, r, "/", http.StatusSeeOther)
 	})
-	r.Run()
+	return mux
 }

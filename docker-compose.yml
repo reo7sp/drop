@@ -1,0 +1,32 @@
+services:
+  redis:
+    image: redis:8.8.1-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 1s
+      retries: 10
+    tmpfs:
+      - /data
+
+  app:
+    build: .
+    environment:
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      redis:
+        condition: service_healthy
+    ports:
+      - "${DROP_PORT:-8080}:8080"
+
+  test:
+    profiles: ["test"]
+    build: .
+    command: ["go", "test", "-race", "-cover", "./..."]
+    environment:
+      TEST_REDIS_URL: redis://redis:6379/15
+    depends_on:
+      redis:
+        condition: service_healthy
+
