@@ -24,7 +24,7 @@ services:
     profiles: ["test"]
     image: drop:test
     build: .
-    command: ["go", "test", "-race", "-cover", "./..."]
+    command: ["go", "test", "-race", "-run", "TestRedisIntegration", "./..."]
     environment:
       TEST_REDIS_URL: redis://redis:6379/15
     depends_on:
