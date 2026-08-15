@@ -21,14 +21,14 @@ func TestRedisIntegration(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	client, err := initRedis(ctx, redisURL)
+	r, err := initRepository(ctx, redisURL)
 	require.NoError(t, err)
-	t.Cleanup(func() { _ = client.Close() })
-	require.NoError(t, client.FlushDB(ctx).Err())
-	t.Cleanup(func() { _ = client.FlushDB(ctx).Err() })
+	t.Cleanup(func() { _ = r.client.Close() })
+	require.NoError(t, r.client.FlushDB(ctx).Err())
+	t.Cleanup(func() { _ = r.client.FlushDB(ctx).Err() })
 
 	tmpl := template.Must(template.ParseGlob("templates/*"))
-	handler := newHandler(client, tmpl)
+	handler := testRouter(r, tmpl)
 	form := url.Values{"text": {"integration drop"}}
 	request := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(form.Encode()))
 	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")

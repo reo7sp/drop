@@ -15,15 +15,16 @@ func main() {
 	cfg := config{}
 	err := env.Parse(&cfg)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("parse config: %v", err)
 	}
 
-	redisClient, err := initRedis(context.Background(), cfg.RedisUrl)
+	r, err := initRepository(context.Background(), cfg.RedisUrl)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("initialize redis: %v", err)
 	}
-	err = initWeb(redisClient)
+
+	err = initHandlers(r)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("start HTTP server: %v", err)
 	}
 }

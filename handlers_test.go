@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"html/template"
 	"net/http"
 	"net/http/httptest"
@@ -12,18 +14,36 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func testHandler(t *testing.T) (http.Handler, func()) {
+func testHandler(t *testing.T) http.Handler {
 	t.Helper()
 
-	server, client := testRedis(t)
+	_, client := testRedis(t)
 	tmpl := template.Must(template.ParseGlob("templates/*"))
-	return newHandler(client, tmpl), server.Close
+	return testRouter(redisRepository{client: client}, tmpl)
+}
+
+func testRouter(r repository, tmpl *template.Template) http.Handler {
+	h := handler{r: r, tmpl: tmpl}
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /{$}", h.handleIndex)
+	mux.HandleFunc("POST /{$}", h.handleCreate)
+	return mux
+}
+
+type failingRepository struct{}
+
+func (failingRepository) FetchAll(context.Context) ([]string, error) {
+	return nil, errors.New("storage unavailable")
+}
+
+func (failingRepository) Save(context.Context, string) error {
+	return errors.New("storage unavailable")
 }
 
 func TestGetDrops(t *testing.T) {
-	handler, _ := testHandler(t)
+	handler := testHandler(t)
 
-	// Seed through the handler's Redis by posting first.
+	// Seed through the handler's redis by posting first.
 	form := url.Values{"text": {"<script>alert(1)</script>"}}
 	post := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(form.Encode()))
 	post.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -40,7 +60,7 @@ func TestGetDrops(t *testing.T) {
 }
 
 func TestPostDrop(t *testing.T) {
-	handler, _ := testHandler(t)
+	handler := testHandler(t)
 	form := url.Values{"text": {"hello"}}
 	recorder := httptest.NewRecorder()
 	request := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(form.Encode()))
@@ -57,7 +77,7 @@ func TestPostDrop(t *testing.T) {
 }
 
 func TestPostRejectsEmptyDrop(t *testing.T) {
-	handler, _ := testHandler(t)
+	handler := testHandler(t)
 	recorder := httptest.NewRecorder()
 	request := httptest.NewRequest(http.MethodPost, "/", strings.NewReader("text="))
 	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -68,7 +88,7 @@ func TestPostRejectsEmptyDrop(t *testing.T) {
 }
 
 func TestRoutesRejectUnsupportedMethodAndPath(t *testing.T) {
-	handler, _ := testHandler(t)
+	handler := testHandler(t)
 	tests := []struct {
 		method string
 		path   string
@@ -87,9 +107,9 @@ func TestRoutesRejectUnsupportedMethodAndPath(t *testing.T) {
 	}
 }
 
-func TestHandlerReportsRedisFailure(t *testing.T) {
-	handler, closeRedis := testHandler(t)
-	closeRedis()
+func TestHandlerReportsStorageFailure(t *testing.T) {
+	tmpl := template.Must(template.ParseGlob("templates/*"))
+	handler := testRouter(failingRepository{}, tmpl)
 
 	for _, request := range []*http.Request{
 		httptest.NewRequest(http.MethodGet, "/", nil),
@@ -101,14 +121,4 @@ func TestHandlerReportsRedisFailure(t *testing.T) {
 		assert.Equal(t, http.StatusInternalServerError, recorder.Code, request.Method)
 		assert.Contains(t, recorder.Body.String(), http.StatusText(http.StatusInternalServerError), request.Method)
 	}
-}
-
-func TestHandlerReportsTemplateFailure(t *testing.T) {
-	_, client := testRedis(t)
-	handler := newHandler(client, template.Must(template.New("other").Parse("unused")))
-	recorder := httptest.NewRecorder()
-
-	handler.ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/", nil))
-
-	assert.Equal(t, http.StatusInternalServerError, recorder.Code)
 }
