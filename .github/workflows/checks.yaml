@@ -34,6 +34,7 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: .
+          target: builder
           load: true
           tags: drop:test
           cache-from: type=gha,scope=checks
@@ -41,6 +42,12 @@ jobs:
 
       - name: Test with redis
         run: docker compose --profile test run --rm test
+
+      - name: Build app image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          cache-from: type=gha,scope=checks
 
       - name: Stop containers
         if: always()

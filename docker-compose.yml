@@ -18,12 +18,14 @@ services:
       redis:
         condition: service_healthy
     ports:
-      - "${DROP_PORT:-8080}:8080"
+      - "${DROP_PORT:-8080}:80"
 
   test:
     profiles: ["test"]
     image: drop:test
-    build: .
+    build:
+      context: .
+      target: builder
     command: ["go", "test", "-race", "-run", "TestRedisIntegration", "./..."]
     environment:
       TEST_REDIS_URL: redis://redis:6379/15

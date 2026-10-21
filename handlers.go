@@ -23,7 +23,7 @@ func initHandlers(r repository) error {
 	mux.HandleFunc("GET /{$}", h.handleIndex)
 	mux.HandleFunc("POST /{$}", h.handleCreate)
 
-	err = http.ListenAndServe(":8080", mux)
+	err = http.ListenAndServe(":80", mux)
 	if err != nil {
 		return fmt.Errorf("serve HTTP: %w", err)
 	}
